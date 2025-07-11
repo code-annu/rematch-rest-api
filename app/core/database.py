@@ -1,31 +1,44 @@
-from fastapi import FastAPI
+import os
 from contextlib import asynccontextmanager
 import certifi
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
+from fastapi import FastAPI, Depends
+import logging
 from dotenv import load_dotenv
+from starlette.requests import Request
 
 load_dotenv()
 
-MONGODB_URI = os.getenv("MONGODB_URI")
-ca = certifi.where()
-
-class Database:
-    client: AsyncIOMotorClient = None
-    database = None
-
-db = Database()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.client = AsyncIOMotorClient(MONGODB_URI, tlsCAFile=ca)
-    db.client = app.state.client
-    app.state.db = app.state.client['rematch_db']
-    await app.state.db.command("ping")
-    db.database = db.client['rematch_db']
-    yield
-    app.state.client.close()
+    # Startup: connect
+    client = AsyncIOMotorClient(os.getenv("MONGODB_URI"), tlsCAFile=certifi.where())
+    db = client["rematch_db"]
+    ping = await db.command("ping")
+    if ping.get("ok") != 1:
+        raise RuntimeError("🚨 Cannot connect to MongoDB Atlas")
+    logger.info("✅ MongoDB connected via Atlas")
 
-async def get_database():
-    return db.database
+    # Attach to app state
+    app.state.mongodb_client = client
+    app.state.db = db
+
+    yield  # App is running
+
+    # Shutdown: close client
+    client.close()
+    logger.info("🛑 MongoDB connection closed")
+
+
+def get_db(request: Request) -> AsyncIOMotorDatabase:
+    return request.app.state.db
+
+
+def get_collection(name: str):
+    def _get_collection(db=Depends(get_db)) -> AsyncIOMotorCollection:
+        return db[name]
+
+    return _get_collection
