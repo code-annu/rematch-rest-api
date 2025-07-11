@@ -1,18 +1,13 @@
-from fastapi import FastAPI, Depends
-from motor.motor_asyncio import AsyncIOMotorCollection
+from fastapi import FastAPI
 
-from .core.database import lifespan, get_db
-from .model.user_model import UserCreate
-from app.core.dependencies import get_user_repository
-from .repository.user_repository import UserRepository
+from .core.database import lifespan
 from .router.user_router import user_router
+from .router.qna_router import qna_router
 
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(router=user_router,prefix="/user")
+app.include_router(router=qna_router,prefix="/qna")
 
 
-# @app.post("/")
-# async def add_user(new_user: UserCreate, user_repo: UserRepository = Depends(get_user_repository)):
-#     return await user_repo.create_user(new_user)
 

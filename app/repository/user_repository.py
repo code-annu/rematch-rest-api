@@ -1,7 +1,4 @@
-# app/repository/user_repository.py
-
 from motor.motor_asyncio import AsyncIOMotorCollection
-from bson import ObjectId
 from app.model.user_model import *
 from app.core.exception import *
 
