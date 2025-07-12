@@ -10,6 +10,8 @@ user_router = APIRouter()
 @user_router.post("/add")
 async def add_new_user(new_user: UserCreate, user_repo: UserRepository = Depends(get_user_repository)):
     try:
+        if await user_repo.get_user(uid=new_user.uid):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User already exists")
         return await user_repo.create_user(new_user)
     except:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong.")
@@ -38,6 +40,6 @@ async def update_user_by_uid(uid: str, update_user: UserUpdate,
 async def update_user_by_uid(uid: str, user_repo: UserRepository = Depends(get_user_repository)):
     try:
         await user_repo.delete_user(uid=uid)
-        return {"message","User deleted successfully."}
+        return {"message", "User deleted successfully."}
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
