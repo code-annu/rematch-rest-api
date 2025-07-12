@@ -7,7 +7,7 @@ class UserCreate(BaseModel):
     uid: str
     first_name: str
     last_name: str
-    dob: str
+    birth_year: int
     gender: str
     bub_id: str | None = None
     qna_id: str | None = None
@@ -16,16 +16,17 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    dob: Optional[str] = None
+    birth_year: Optional[int] = None
     gender: Optional[str] = None
     bub_id: Optional[str] = None
     qna_id: Optional[str] = None
+
 
 class UserResponse(BaseModel):
     uid: str
     first_name: str
     last_name: str
-    dob: str
+    birth_year: int
     gender: str
     bub_id: str | None = None
     qna_id: str | None = None
