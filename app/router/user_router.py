@@ -1,3 +1,5 @@
+from watchfiles import awatch
+
 from app.core.exception import InvalidUpdateError, ResourceNotFoundError
 from app.model.user_model import *
 from app.repository.user_repository import UserRepository
@@ -10,11 +12,15 @@ user_router = APIRouter()
 @user_router.post("/add")
 async def add_new_user(new_user: UserCreate, user_repo: UserRepository = Depends(get_user_repository)):
     try:
-        if await user_repo.get_user(uid=new_user.uid):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User already exists")
+        await user_repo.get_user(uid=new_user.uid)
+        return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User already exists")
+    except ResourceNotFoundError:
+        pass
+
+    try:
         return await user_repo.create_user(new_user)
-    except:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong.")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Something went wrong {e}")
 
 
 @user_router.get("/get")
@@ -43,3 +49,9 @@ async def update_user_by_uid(uid: str, user_repo: UserRepository = Depends(get_u
         return {"message", "User deleted successfully."}
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@user_router.get("/all")
+async def get_user_for(gender: str, min_birth_year: int, max_birth_year: int,
+                       user_repo: UserRepository = Depends(get_user_repository)):
+    return await user_repo.get_users(gender=gender, min_birth_year=min_birth_year, max_birth_year=max_birth_year)

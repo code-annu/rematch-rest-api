@@ -1,3 +1,4 @@
+from fastapi import Query
 from motor.motor_asyncio import AsyncIOMotorCollection
 from app.model.user_model import *
 from app.core.exception import *
@@ -36,3 +37,24 @@ class UserRepository:
         result = await self.user_collection.delete_one({"uid": uid})
         if result.deleted_count == 0:
             raise ResourceNotFoundError(f"User {uid} not found")
+
+    async def get_users(
+            self,
+            min_birth_year: Optional[int] = Query(None, alias="birth_year_gte"),
+            max_birth_year: Optional[int] = Query(None, alias="birth_year_lte"),
+            gender: Optional[str] = None
+    ) -> list[UserResponse]:
+        query = {}
+        if min_birth_year is not None:
+            query.setdefault("birth_year", {})["$gte"] = min_birth_year
+        if max_birth_year is not None:
+            query.setdefault("birth_year", {})["$lte"] = max_birth_year
+        if gender:
+            query["gender"] = gender
+
+        docs = await self.user_collection.find(query).to_list(length=None)
+        users: list[UserResponse] = []
+        for doc in docs:
+            doc["id"] = str(doc.pop("_id"))
+            users.append(UserResponse(**doc))
+        return users

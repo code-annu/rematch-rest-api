@@ -8,6 +8,7 @@ class QnaCreate(BaseModel):
     pain_rate: int
     relationship_length: int  # In months
     coping_mechanism: str
+    emotional_quotient: str
 
 
 class QnaUpdate(BaseModel):
@@ -15,6 +16,7 @@ class QnaUpdate(BaseModel):
     pain_rate: Optional[int] = None
     relationship_length: Optional[int] = None
     coping_mechanism: Optional[str] = None
+    emotional_quotient: Optional[str] = None
 
 
 class QnaResponse(BaseModel):
@@ -23,3 +25,4 @@ class QnaResponse(BaseModel):
     pain_rate: int
     relationship_length: int
     coping_mechanism: str
+    emotional_quotient: str
