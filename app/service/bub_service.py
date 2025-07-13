@@ -1,14 +1,13 @@
-from fastapi import Depends
-from app.model.user_model import *
-from app.repository.user_repository import UserRepository
-from app.core.dependencies import get_user_repository, get_qna_repository
-from app.repository.qna_repository import QnaRepository
 from app.matcher.match_me import measure_qna_similarity
+from app.model.user_model import *
+from app.repository.qna_repository import QnaRepository
+from app.repository.user_repository import UserRepository
 
 
-async def match_me(me: UserResponse, min_birth_year: int, max_birth_year: int,
+async def match_me(user_uid: str, min_birth_year: int, max_birth_year: int,
                    gender: str, user_repo: UserRepository, qna_repo: QnaRepository) -> tuple[
     UserResponse, float]:
+    me = await user_repo.get_user(user_uid)
     users = await user_repo.get_users(min_birth_year=min_birth_year, max_birth_year=max_birth_year,
                                       gender=gender)
     best_score = -1
@@ -21,6 +20,3 @@ async def match_me(me: UserResponse, min_birth_year: int, max_birth_year: int,
             best_score = score
             bub = user
     return bub, best_score
-
-
-
